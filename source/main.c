@@ -28,13 +28,14 @@ volatile bool runThreads = true;
  */
 static void showControls(void)
 {
-	printf("Button mappings:\n"
+	printf("\n"
+			"Button mappings:\n"
 			"Pause: L+R or L+Up\n"
 			"Previous/Next Song: ZL/ZR or L/R\n"
 			"A: Open File\n"
 			"B: Go up folder\n"
 			"Start: Exit\n"
-			"Browse: Up, Down, Left or Right\n");
+			"Browse: Up, Down, Left or Right\n\n");
 }
 
 /**
