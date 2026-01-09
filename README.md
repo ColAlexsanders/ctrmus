@@ -11,21 +11,22 @@ The latest 3DSX/CIA/3DS download can be found on the <a href="https://github.com
 * Ability to browse directories.
 
 ## Controls
-L+R or L+Up: Pause
+**L+R/L+Up**: Pause
 
-ZL/ZR or L/R: Previous/Next Song
+**ZL/ZR**: Previous/Next Song
+**Hold 1s L/R**: Previous/Next Song
 
-L+Left: Show Controls
+**L+Left**: Show Controls
 
-A: Play file or change to selected directory
+**A**: Play file or change to selected directory
 
-B: Go up folder
+**B**: Go up folder
 
-Up & down = Move cursor
+**Up & down**: Move cursor
 
-Left & right = Move cursor skipping 13 files at a time.
+**Left & right**: Move cursor skipping 13 files at a time.
 
-Start: Exit
+**Start**: Exit
 
 # Contributing
 
