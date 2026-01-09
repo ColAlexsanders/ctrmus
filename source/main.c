@@ -61,15 +61,15 @@ void playbackWatchdog(void* infoIn)
 			printf("Error %d: %s\n", *info->errInfo->error,
 					ctrmus_strerror(*info->errInfo->error));
 		}
-		else if (*info->errInfo->error == -1)
-		{
-			//continue;
-			/* Used to signify that playback has stopped.
-			 * Not technically an error.
-			 */
-			consoleSelect(info->screen);
-			puts("Stopped");
-		}
+//		else if (*info->errInfo->error == -1)
+//		{
+//			//continue;
+//			/* Used to signify that playback has stopped.
+//			 * Not technically an error.
+//			 */
+//			consoleSelect(info->screen);
+//			puts("Stopped");
+//		}
 	}
 
 	return;
