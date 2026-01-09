@@ -55,14 +55,14 @@ void playbackWatchdog(void* infoIn)
 
 		if(*info->errInfo->error > 0)
 		{
-			continue;
+			//continue;
 			consoleSelect(info->screen);
 			printf("Error %d: %s\n", *info->errInfo->error,
 					ctrmus_strerror(*info->errInfo->error));
 		}
 		else if (*info->errInfo->error == -1)
 		{
-			continue;
+			//continue;
 			/* Used to signify that playback has stopped.
 			 * Not technically an error.
 			 */
