@@ -281,11 +281,12 @@ int getNumberFiles(void)
 	if((dp = opendir(".")) == NULL)
 		goto err;
 
-	while((ep = readdir(dp)) != NULL)
+	while((ep = readdir(dp)) != NULL) {
 		if(ep->d_name[0] == '.')
 			continue;
 		ret++;
-
+	}
+	
 	closedir(dp);
 
 out:
