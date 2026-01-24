@@ -8,6 +8,7 @@
  */
 
 #include <3ds.h>
+#include <3ds/os.h>
 #include <dirent.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -21,6 +22,8 @@
 #include "main.h"
 #include "playback.h"
 
+#define MAX_PRESSES 3 // for song skipping - will take three consecutive presses
+					  // of the L/ZL or R/ZR buttons to get to the next song
 volatile bool runThreads = true;
 
 /**
@@ -331,6 +334,9 @@ int main(int argc, char **argv)
 	bool zlHoldTriggered = false;
 	bool zrHoldTriggered = false;
 
+	u64 press_count[MAX_PRESSES] = {0}; // for song skipping
+	int press_idx = 0;
+
 	gfxInitDefault();
 	consoleInit(GFX_TOP, &topScreenLog);
 	consoleInit(GFX_TOP, &topScreenInfo);
@@ -425,10 +431,14 @@ int main(int argc, char **argv)
 		if (kDown & KEY_ZL) {
 			zlPressTime = osGetTime();
 			zlHoldTriggered = false;
+			press_count[press_idx] = zlPressTime;
+			press_idx = (press_idx + 1) % MAX_PRESSES;
 		}
 		if (kDown & KEY_ZR) {
 			zrPressTime = osGetTime();
 			zrHoldTriggered = false;
+			press_count[press_idx] = zrPressTime;
+			press_idx = (press_idx + 1) % MAX_PRESSES;
 		}
 		if (kUp & KEY_ZL) {
 			zlPressTime = 0;
@@ -656,30 +666,36 @@ int main(int argc, char **argv)
 		 *   and are ignored if they were part of a combo (pause) press.
 		 */
 
-		/* Instant next (ZR) */
+
+		int count = 0;
 		if ((kHeld & KEY_ZR) && zrPressTime != 0 && !zrHoldTriggered && !keyZRComboPressed) {
-			if (osGetTime() - zrPressTime >= 2000) {
-				if (fileNum < fileMax && dirList.dirNum < fileNum+1) {
-					fileNum += 1;
-					if(fileNum >= MAX_LIST && fileMax - fileNum >= 0 &&
-							from < fileMax - MAX_LIST)
-						from++;
-					consoleSelect(&topScreenInfo);
-					consoleClear();
-					consoleSelect(&topScreenLog);
-					changeFile(dirList.files[fileNum - dirList.dirNum - 1], &playbackInfo);
-					error = 0;
-					consoleSelect(&bottomScreen);
-					if(listDir(from, MAX_LIST, fileNum, dirList) < 0) err_print("Unable to list directory.");
+			for (int i = 0; i < MAX_PRESSES; i++){
+				if (zrPressTime - press_count[i] <= 1000) {
+					count++;
+					if (count == MAX_PRESSES){
+						if (fileNum < fileMax && dirList.dirNum < fileNum+1) {
+							fileNum += 1;
+							if(fileNum >= MAX_LIST && fileMax - fileNum >= 0 &&
+									from < fileMax - MAX_LIST)
+								from++;
+							consoleSelect(&topScreenInfo);
+							consoleClear();
+							consoleSelect(&topScreenLog);
+							changeFile(dirList.files[fileNum - dirList.dirNum - 1], &playbackInfo);
+							error = 0;
+							consoleSelect(&bottomScreen);
+							if(listDir(from, MAX_LIST, fileNum, dirList) < 0) err_print("Unable to list directory.");
+						}
+					zrHoldTriggered = true;
+					//continue;
+					}
 				}
-				zrHoldTriggered = true;
-				continue;
 			}
 		}
 
 		/* Instant previous (ZL) */ 
 		if ((kHeld & KEY_ZL) && zlPressTime != 0 && !zlHoldTriggered && !keyZLComboPressed) {
-			if (osGetTime() - zlPressTime >= 2000) {
+			if (press_count[MAX_PRESSES] && osGetTime() - zlPressTime <= 1000) {
 				if (fileNum > 1 && dirList.dirNum < fileNum-1) {
 					fileNum -= 1;
 					if(fileMax - fileNum > MAX_LIST-2 && from != 0)
@@ -692,8 +708,8 @@ int main(int argc, char **argv)
 					consoleSelect(&bottomScreen);
 					if(listDir(from, MAX_LIST, fileNum, dirList) < 0) err_print("Unable to list directory.");
 				}
-				zlHoldTriggered = true;
-				continue;
+			zlHoldTriggered = true;
+			continue;
 			}
 		} 
 
