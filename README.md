@@ -14,6 +14,7 @@ The latest 3DSX/CIA/3DS download can be found on the <a href="https://github.com
 **L+R, ZL+ZR, L+Up, or ZL+Up**: Pause
 
 **Hit L or ZL 3 times**: Previous Song
+
 **Hit R or ZR 3 times**: Next Song
 
 **L+Left**: Show Controls
