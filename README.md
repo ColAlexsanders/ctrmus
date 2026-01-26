@@ -17,7 +17,7 @@ The latest 3DSX/CIA/3DS download can be found on the <a href="https://github.com
 
 **Hit R or ZR 3 times**: Next Song
 
-**L+Left**: Show Controls
+**L+Left or ZL+Left**: Show Controls
 
 **A**: Play file or change to selected directory
 
