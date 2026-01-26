@@ -11,10 +11,10 @@ The latest 3DSX/CIA/3DS download can be found on the <a href="https://github.com
 * Ability to browse directories.
 
 ## Controls
-**L+R/L+Up**: Pause
+**L+R, ZL+ZR, L+Up, or ZL+Up**: Pause
 
-**ZL/ZR**: Previous/Next Song
-**Hold 1s L/R**: Previous/Next Song
+**Hit L or ZL 3 times**: Previous Song
+**Hit R or ZR 3 times**: Next Song
 
 **L+Left**: Show Controls
 

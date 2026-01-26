@@ -22,9 +22,10 @@
 #include "main.h"
 #include "playback.h"
 
-#define MAX_PRESSES 3 // for song skipping - will take three consecutive presses
-					  // of the L/ZL or R/ZR buttons to get to the next song
-
+/* for song skipping - will take three consecutive presses 
+ * of the L/ZL or R/ZR buttons to get to the next song */
+#define MAX_PRESSES 3 
+					  
 volatile bool runThreads = true;
 
 /**
@@ -34,9 +35,9 @@ static void showControls(void)
 {
 	printf("\n"
 			"Button mappings:\n"
-			"Pause: L+R or L+Up\n"
-			"Previous/Next Song: ZL/ZR 2s\n"
-			"Previous/Next Song: Hold L/R 2s\n"
+			"Pause: L+R, ZL+ZR, L+Up, or ZL+Up\n"
+			"Previous Song: Hit L or ZL 3 times\n"
+			"Next Song: Hit R or ZR 3 times\n"
 			"A: Open File\n"
 			"B: Go up folder\n"
 			"Start: Exit\n"
@@ -323,22 +324,20 @@ int main(int argc, char **argv)
 	bool keyZLComboPressed = false;
 	bool keyZRComboPressed = false;
 
-	/* track hold time for L and R so they only change song after 1s hold */
+	/* track button press time for L and R (for counting button 
+	 * presses within a given period of time as seen later) */
 	u64 lPressTime = 0;
 	u64 rPressTime = 0;
-	//bool lHoldTriggered = false;
-	//bool rHoldTriggered = false;
 	
+	/* track press count for L and R */	
 	static u64 lPressCount[MAX_PRESSES] = {0};
 	static u64 rPressCount[MAX_PRESSES] = {0};
 	static int lPressIdx = 0;
 	static int rPressIdx = 0;	
 
-	/* track hold time for ZL and ZR*/
+	/* track button press time for ZL and ZR*/
 	u64 zlPressTime = 0;
 	u64 zrPressTime = 0;
-	//bool zlHoldTriggered = false;
-	//bool zrHoldTriggered = false;
 
 	/* track press count for ZL and ZR  */
 	static u64 zlPressCount[MAX_PRESSES] = {0};
@@ -346,7 +345,7 @@ int main(int argc, char **argv)
 	static int zlPressIdx = 0;
 	static int zrPressIdx = 0;
 	
-	static u64 lastSkipTime = 0;
+	static u64 lastSkipTime = 0; // for skip cooldown
 	
 	gfxInitDefault();
 	consoleInit(GFX_TOP, &topScreenLog);
@@ -416,42 +415,40 @@ int main(int argc, char **argv)
 		kHeld = hidKeysHeld();
 		kUp = hidKeysUp();
 		
-		u64 now = osGetTime();
+		u64 now = osGetTime(); // for skip cooldown
 		int count = 0;
 
-		/* track press times for L and R to support 2s hold to change songs */
+		/* track press times for L and R to support song skipping */
 		if (kDown & KEY_L) {
 			lPressTime = osGetTime();
 			//lHoldTriggered = false;
 			lPressCount[lPressIdx] = lPressTime;
 			lPressIdx = (lPressIdx + 1) % MAX_PRESSES;
-		} else if (kDown & KEY_R) {
+		}
+		if (kDown & KEY_R) {				 
 			rPressTime = osGetTime();
 			//rHoldTriggered = false;
 			rPressCount[rPressIdx] = rPressTime;
 			rPressIdx = (rPressIdx + 1) % MAX_PRESSES;
-
 		}
 		if (kUp & KEY_L) {
 			lPressTime = 0;
-			//lHoldTriggered = false;
 			/* clear combo flag on release */
 			keyLComboPressed = false;
 		}
 		if (kUp & KEY_R) {
 			rPressTime = 0;
-			//rHoldTriggered = false;
 			/* clear combo flag on release */
 			keyRComboPressed = false;
 		}
 
-		/* track press times for ZL and ZR to enable song skipping logic */
+		/* for ZL and ZR song skip */
 		if (kDown & KEY_ZL) {
 			zlPressTime = osGetTime();
 			zlPressCount[zlPressIdx] = zlPressTime;
 			zlPressIdx = (zlPressIdx + 1) % MAX_PRESSES;
-		} else if (kDown & KEY_ZR) { // Prioritizes checking the count of ZL over ZR's, making it to where if both buttons are
-									 // pressed three times, the index doesn't increment.
+		} 
+		if (kDown & KEY_ZR) {
 			zrPressTime = osGetTime();
 			zrPressCount[zrPressIdx] = zrPressTime;
 			zrPressIdx = (zrPressIdx + 1) % MAX_PRESSES;
@@ -500,6 +497,13 @@ int main(int argc, char **argv)
 				if (KEY_R & kDown) {
 					keyRComboPressed = true;
 				}
+				
+				/* don't increase the skip index for this operation */
+				lPressIdx = 0; 
+				rPressIdx = 0;
+			    memset(lPressCount, 0, sizeof(lPressCount));
+				memset(rPressCount, 0, sizeof(rPressCount));		
+
 				continue;
 			}
 
@@ -526,6 +530,12 @@ int main(int argc, char **argv)
 
 			keyLComboPressed = true;
 			keyRComboPressed = true;
+
+			lPressIdx = 0;
+			rPressIdx = 0;
+			memset(lPressCount, 0, sizeof(lPressCount));
+			memset(rPressCount, 0, sizeof(rPressCount));		
+
 			continue;
 		}
 		
@@ -549,10 +559,16 @@ int main(int argc, char **argv)
 				if (KEY_ZR & kDown) {
 					keyZRComboPressed = true;
 				}
+
+				zlPressIdx = 0;
+				zrPressIdx = 0;
+			    memset(zlPressCount, 0, sizeof(zlPressCount));
+				memset(zrPressCount, 0, sizeof(zrPressCount));		
+				
 				continue;
 			}
 
-			/* Show controls */
+			/* Show controls (redundancy) */
 			if(kDown & KEY_LEFT)
 			{
 				consoleSelect(&topScreenLog);
@@ -575,6 +591,12 @@ int main(int argc, char **argv)
 
 			keyZLComboPressed = true;
 			keyZRComboPressed = true;
+			
+			zlPressIdx = 0;
+			zrPressIdx = 0;
+			memset(zlPressCount, 0, sizeof(zlPressCount));
+			memset(zrPressCount, 0, sizeof(zrPressCount));		
+
 			continue;
 		}
 
@@ -727,14 +749,20 @@ int main(int argc, char **argv)
 		 * - press L/ZL three times within half a second to go back one song
 		 * - same deal with R/ZR but it forwards to the next song
 		 */
-
-		if ((kHeld & KEY_ZR) && zrPressTime != 0) {
-			for (int i = 0; i < MAX_PRESSES; i++){
-				if (zrPressTime - zrPressCount[i] <= 1000) { // 1 second
+		
+		if ((kHeld & KEY_ZR) && zrPressTime != 0) 
+		{
+			for (int i = 0; i < MAX_PRESSES; i++)
+			{
+				if (zrPressTime - zrPressCount[i] <= 500) // accept skip attempts that occur in under 500ms
+				{
 					count++;
-					if (count == MAX_PRESSES){
-						if (now - lastSkipTime > 1000){
-							if (fileNum < fileMax && dirList.dirNum < fileNum+1) {
+					if (count == MAX_PRESSES)
+					{
+						if (now - lastSkipTime > 1000) // cannot skip song for one second to avoid button spam
+						{ 
+							if (fileNum < fileMax && dirList.dirNum < fileNum+1) 
+							{
 								fileNum += 1;
 								if(fileNum >= MAX_LIST && fileMax - fileNum >= 0 && from < fileMax - MAX_LIST)
 									from++;
@@ -747,6 +775,8 @@ int main(int argc, char **argv)
 							error = 0;
 							consoleSelect(&bottomScreen);
 							if(listDir(from, MAX_LIST, fileNum, dirList) < 0) err_print("Unable to list directory.");
+							
+							/* reset index after operation completes */
 							zrPressIdx = 0;
 							memset(zrPressCount, 0, sizeof(zrPressCount));
 						}
@@ -754,14 +784,20 @@ int main(int argc, char **argv)
 				}
 			}
 		}
-		
-		if ((kHeld & KEY_ZL) && zlPressTime != 0) {
-			for (int i = 0; i < MAX_PRESSES; i++){
-				if (zlPressTime - zlPressCount[i] <= 1000) { 
+	
+		if ((kHeld & KEY_ZL) && zlPressTime != 0)
+		{
+			for (int i = 0; i < MAX_PRESSES; i++)
+			{
+				if (zlPressTime - zlPressCount[i] <= 500)
+				{ 
 					count++;
-					if (count == MAX_PRESSES){
-						if (now - lastSkipTime > 1000){
-							if (fileNum > 1 && dirList.dirNum < fileNum-1) {
+					if (count == MAX_PRESSES)
+					{
+						if (now - lastSkipTime > 1000)
+						{
+							if (fileNum > 1 && dirList.dirNum < fileNum-1) 
+							{
 								fileNum -= 1;
 								if(fileMax - fileNum > MAX_LIST-2 && from != 0)
 									from--;
@@ -783,12 +819,17 @@ int main(int argc, char **argv)
 			}
 		}
 
-		if ((kHeld & KEY_R) && rPressTime != 0) {
-			for (int i = 0; i < MAX_PRESSES; i++){
-				if (rPressTime - rPressCount[i] <= 1000) {
+		if ((kHeld & KEY_R) && rPressTime != 0) 
+		{
+			for (int i = 0; i < MAX_PRESSES; i++)
+			{
+				if (rPressTime - rPressCount[i] <= 500) 
+				{
 					count++;
-					if (count == MAX_PRESSES){
-						if (now - lastSkipTime > 1000){
+					if (count == MAX_PRESSES)
+					{
+						if (now - lastSkipTime > 1000)
+						{
 							if (fileNum < fileMax && dirList.dirNum < fileNum+1) {
 								fileNum += 1;
 								if(fileNum >= MAX_LIST && fileMax - fileNum >= 0 && from < fileMax - MAX_LIST)
@@ -810,12 +851,15 @@ int main(int argc, char **argv)
 			}
 		}
 
-		/* L held for >=2000ms: Previous song (only if not part of combo) */
-		if ((kHeld & KEY_L) && lPressTime != 0) {
-			for (int i = 0; i < MAX_PRESSES; i++){
-				if (lPressTime - lPressCount[i] <= 1000) {
+		if ((kHeld & KEY_L) && lPressTime != 0) 
+		{
+			for (int i = 0; i < MAX_PRESSES; i++)
+			{
+				if (lPressTime - lPressCount[i] <= 500) 
+				{
 					count++;
-					if (count == MAX_PRESSES){
+					if (count == MAX_PRESSES)
+					{
 						if (now - lastSkipTime > 1000){
 							if (fileNum > 1 && dirList.dirNum < fileNum-1) {
 								fileNum -= 1;
@@ -839,9 +883,11 @@ int main(int argc, char **argv)
 		}
 
 		// play next song automatically
-		if (error == -1) {
+		if (error == -1) 
+		{
 			// don't try to play folders
-			if (fileNum >= fileMax || dirList.dirNum >= fileNum) {
+			if (fileNum >= fileMax || dirList.dirNum >= fileNum) 
+			{
 				error = 0;
 				continue;
 			}
