@@ -746,7 +746,7 @@ int main(int argc, char **argv)
 
 		/* 
 		 * Handle song change for R/ZR and L/ZL:
-		 * - press L/ZL three times within 300ms to go back one song
+		 * - press L/ZL three times within 400ms to go back one song
 		 * - same deal with R/ZR but it forwards to the next song
 		 */
 		
@@ -754,13 +754,13 @@ int main(int argc, char **argv)
 		{
 			for (int i = 0; i < MAX_PRESSES; i++)
 			{
-				/* accept skip attempts that occur in under 300ms */
-				if (zrPressTime - zrPressCount[i] <= 300) 
+				/* accept skip attempts that occur in under 400ms */
+				if (zrPressTime - zrPressCount[i] <= 400) 
 				{
 					count++;
 					if (count == MAX_PRESSES)
 					{
-						/* cannot skip song for two seconds to avoid continuous skipping */
+						/* cannot skip song for two seconds to avoid button spam */
 						if (now - lastSkipTime > 2000) 
 						{ 
 							if (fileNum < fileMax && dirList.dirNum < fileNum+1) 
@@ -791,7 +791,7 @@ int main(int argc, char **argv)
 		{
 			for (int i = 0; i < MAX_PRESSES; i++)
 			{
-				if (zlPressTime - zlPressCount[i] <= 300)
+				if (zlPressTime - zlPressCount[i] <= 400)
 				{ 
 					count++;
 					if (count == MAX_PRESSES)
@@ -825,7 +825,7 @@ int main(int argc, char **argv)
 		{
 			for (int i = 0; i < MAX_PRESSES; i++)
 			{
-				if (rPressTime - rPressCount[i] <= 300) 
+				if (rPressTime - rPressCount[i] <= 400) 
 				{
 					count++;
 					if (count == MAX_PRESSES)
@@ -857,7 +857,7 @@ int main(int argc, char **argv)
 		{
 			for (int i = 0; i < MAX_PRESSES; i++)
 			{
-				if (lPressTime - lPressCount[i] <= 300) 
+				if (lPressTime - lPressCount[i] <= 400) 
 				{
 					count++;
 					if (count == MAX_PRESSES)
