@@ -746,7 +746,7 @@ int main(int argc, char **argv)
 
 		/* 
 		 * Handle song change for R/ZR and L/ZL:
-		 * - press L/ZL three times within half a second to go back one song
+		 * - press L/ZL three times within 300ms to go back one song
 		 * - same deal with R/ZR but it forwards to the next song
 		 */
 		
@@ -754,12 +754,14 @@ int main(int argc, char **argv)
 		{
 			for (int i = 0; i < MAX_PRESSES; i++)
 			{
-				if (zrPressTime - zrPressCount[i] <= 500) // accept skip attempts that occur in under 500ms
+				/* accept skip attempts that occur in under 300ms */
+				if (zrPressTime - zrPressCount[i] <= 300) 
 				{
 					count++;
 					if (count == MAX_PRESSES)
 					{
-						if (now - lastSkipTime > 1000) // cannot skip song for one second to avoid button spam
+						/* cannot skip song for two seconds to avoid continuous skipping */
+						if (now - lastSkipTime > 2000) 
 						{ 
 							if (fileNum < fileMax && dirList.dirNum < fileNum+1) 
 							{
@@ -789,12 +791,12 @@ int main(int argc, char **argv)
 		{
 			for (int i = 0; i < MAX_PRESSES; i++)
 			{
-				if (zlPressTime - zlPressCount[i] <= 500)
+				if (zlPressTime - zlPressCount[i] <= 300)
 				{ 
 					count++;
 					if (count == MAX_PRESSES)
 					{
-						if (now - lastSkipTime > 1000)
+						if (now - lastSkipTime > 2000)
 						{
 							if (fileNum > 1 && dirList.dirNum < fileNum-1) 
 							{
@@ -823,12 +825,12 @@ int main(int argc, char **argv)
 		{
 			for (int i = 0; i < MAX_PRESSES; i++)
 			{
-				if (rPressTime - rPressCount[i] <= 500) 
+				if (rPressTime - rPressCount[i] <= 300) 
 				{
 					count++;
 					if (count == MAX_PRESSES)
 					{
-						if (now - lastSkipTime > 1000)
+						if (now - lastSkipTime > 2000)
 						{
 							if (fileNum < fileMax && dirList.dirNum < fileNum+1) {
 								fileNum += 1;
@@ -855,12 +857,12 @@ int main(int argc, char **argv)
 		{
 			for (int i = 0; i < MAX_PRESSES; i++)
 			{
-				if (lPressTime - lPressCount[i] <= 500) 
+				if (lPressTime - lPressCount[i] <= 300) 
 				{
 					count++;
 					if (count == MAX_PRESSES)
 					{
-						if (now - lastSkipTime > 1000){
+						if (now - lastSkipTime > 2000){
 							if (fileNum > 1 && dirList.dirNum < fileNum-1) {
 								fileNum -= 1;
 								if(fileMax - fileNum > MAX_LIST-2 && from != 0)
